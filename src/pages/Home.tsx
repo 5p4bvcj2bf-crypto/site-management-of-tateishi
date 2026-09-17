@@ -1,0 +1,197 @@
+import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import {
+  Building2,
+  ClipboardCheck,
+  FileWarning,
+  HardHat,
+  LayoutDashboard,
+  RotateCcw,
+  UserRound,
+} from 'lucide-react'
+import { Toaster } from '@/components/ui/sonner'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import ClaimsPage from '@/components/ClaimsPage'
+import Dashboard from '@/components/Dashboard'
+import ReportsPage from '@/components/ReportsPage'
+import SitesPage from '@/components/SitesPage'
+import { useGenbaStore } from '@/lib/store'
+
+type PageKey = 'dashboard' | 'sites' | 'reports' | 'claims'
+
+const NAV: { key: PageKey; label: string; icon: typeof LayoutDashboard }[] = [
+  { key: 'dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
+  { key: 'sites', label: '現場管理', icon: Building2 },
+  { key: 'reports', label: '日次確認', icon: ClipboardCheck },
+  { key: 'claims', label: 'クレーム管理', icon: FileWarning },
+]
+
+const TITLES: Record<PageKey, string> = {
+  dashboard: 'ダッシュボード',
+  sites: '現場管理',
+  reports: '日次確認（日報）',
+  claims: 'クレーム管理',
+}
+
+const SUBTITLES: Record<PageKey, string> = {
+  dashboard: '現場・日次報告・クレームの状況を一目で確認',
+  sites: 'キッチン / ユニットバスの現場・担当者・施工会社・進捗の管理',
+  reports: '毎日の現場状況・安全確認の記録',
+  claims: 'クレームの内容・重要度・納期（対応期限）の管理',
+}
+
+export default function Home() {
+  const store = useGenbaStore()
+  const [page, setPage] = useState<PageKey>('dashboard')
+
+  const todayLabel = useMemo(() => {
+    const d = new Date()
+    const days = ['日', '月', '火', '水', '木', '金', '土']
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${days[d.getDay()]})`
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <Toaster position="top-right" richColors />
+
+      {/* ヘッダー */}
+      <header className="sticky top-0 z-20 border-b bg-slate-900 text-white shadow-sm dark:bg-slate-950">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-md bg-amber-500 p-1.5 text-slate-900">
+              <HardHat className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold leading-tight tracking-wide">
+                Site management of Tateishi
+              </h1>
+              <p className="text-[10px] font-medium text-slate-400">
+                キッチン・ユニットバス 現場・クレーム管理
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs text-slate-300 sm:block">{todayLabel}</span>
+            {/* 利用者切り替え */}
+            <div className="flex items-center gap-2">
+              <UserRound className="h-4 w-4 text-slate-300" />
+              <Select
+                value={store.currentMemberId}
+                onValueChange={(id) => {
+                  store.setCurrentMemberId(id)
+                  const m = store.memberById(id)
+                  if (m) toast.success(`${m.name} さんとして利用中（${m.role}）`)
+                }}
+              >
+                <SelectTrigger className="h-8 w-40 border-slate-600 bg-slate-800 text-xs text-white hover:bg-slate-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {store.data.members.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}（{m.role}）
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {store.currentMember && (
+                <Badge
+                  className={
+                    store.currentMember.role === '管理者'
+                      ? 'border-0 bg-amber-500 text-slate-900 hover:bg-amber-500'
+                      : 'border-0 bg-slate-600 text-white hover:bg-slate-600'
+                  }
+                >
+                  {store.currentMember.role}
+                </Badge>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-slate-300 hover:bg-slate-800 hover:text-white"
+              onClick={() => {
+                if (window.confirm('サンプルデータに初期化しますか？入力中のデータは上書きされます。')) {
+                  store.resetAll()
+                }
+              }}
+            >
+              <RotateCcw className="mr-1 h-3.5 w-3.5" />
+              初期化
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto flex max-w-7xl">
+        {/* サイドナビ（PC） */}
+        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-52 shrink-0 border-r bg-white p-3 dark:bg-slate-900 md:block">
+          <nav className="space-y-1">
+            {NAV.map((n) => (
+              <button
+                key={n.key}
+                onClick={() => setPage(n.key)}
+                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  page === n.key
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                }`}
+              >
+                <n.icon
+                  className={`h-4 w-4 ${page === n.key ? 'text-amber-600 dark:text-amber-400' : ''}`}
+                />
+                {n.label}
+              </button>
+            ))}
+          </nav>
+          <p className="mt-6 px-3 text-[11px] leading-relaxed text-slate-400">
+            データはこの端末のブラウザに保存されます。他のメンバーが登録したデータは閲覧のみです（管理者は編集可）。
+          </p>
+        </aside>
+
+        {/* メイン */}
+        <main className="min-w-0 flex-1 p-4 md:p-6">
+          <div className="mb-5">
+            <h2 className="text-xl font-bold">{TITLES[page]}</h2>
+            <p className="text-sm text-muted-foreground">{SUBTITLES[page]}</p>
+          </div>
+
+          {/* モバイル用タブ */}
+          <div className="mb-5 flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1 dark:bg-slate-800 md:hidden">
+            {NAV.map((n) => (
+              <button
+                key={n.key}
+                onClick={() => setPage(n.key)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold ${
+                  page === n.key ? 'bg-white shadow-sm dark:bg-slate-950' : 'text-slate-500'
+                }`}
+              >
+                <n.icon className="h-3.5 w-3.5" />
+                {n.label}
+              </button>
+            ))}
+          </div>
+
+          {page === 'dashboard' && (
+            <Dashboard
+              store={store}
+              goClaims={() => setPage('claims')}
+              goReports={() => setPage('reports')}
+            />
+          )}
+          {page === 'sites' && <SitesPage store={store} />}
+          {page === 'reports' && <ReportsPage store={store} />}
+          {page === 'claims' && <ClaimsPage store={store} />}
+        </main>
+      </div>
+    </div>
+  )
+}
