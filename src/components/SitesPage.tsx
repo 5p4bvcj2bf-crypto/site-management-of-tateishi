@@ -84,7 +84,7 @@ export default function SitesPage({ store }: { store: GenbaStore }) {
       store.updateSite({ ...form, id: editing.id })
       toast.success(`「${form.name}」を更新しました`)
     } else {
-      store.addSite({ ...form, createdBy: store.currentMemberId })
+      store.addSite({ ...form, createdBy: store.currentUserName })
       toast.success(`「${form.name}」を登録しました`)
     }
     setDialogOpen(false)
@@ -182,7 +182,7 @@ export default function SitesPage({ store }: { store: GenbaStore }) {
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">登録者</p>
                     <p className="font-medium">
-                      {store.memberById(s.createdBy)?.name ?? '—'}
+                      {s.createdBy || '—'}
                       {store.canEdit(s.createdBy) ? '' : '（閲覧のみ）'}
                     </p>
                   </div>
