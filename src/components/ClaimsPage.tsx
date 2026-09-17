@@ -410,7 +410,6 @@ export default function ClaimsPage({ store }: { store: GenbaStore }) {
                   id="c-manager"
                   value={form.manager}
                   onChange={(e) => set('manager', e.target.value)}
-                  placeholder="例: 田中 健一"
                 />
               </div>
               <div className="space-y-1.5">
@@ -419,7 +418,6 @@ export default function ClaimsPage({ store }: { store: GenbaStore }) {
                   id="c-contractor"
                   value={form.contractor}
                   onChange={(e) => set('contractor', e.target.value)}
-                  placeholder="例: 山田建設株式会社"
                 />
               </div>
             </div>
@@ -429,7 +427,6 @@ export default function ClaimsPage({ store }: { store: GenbaStore }) {
                 id="c-title"
                 value={form.title}
                 onChange={(e) => set('title', e.target.value)}
-                placeholder="例: 近隣住民からの騒音クレーム"
               />
             </div>
             <div className="space-y-1.5">

@@ -247,7 +247,6 @@ export default function SitesPage({ store }: { store: GenbaStore }) {
                 id="site-name"
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
-                placeholder="例: 〇〇マンション キッチン取替工事"
               />
             </div>
             <div className="space-y-1.5">
@@ -283,7 +282,6 @@ export default function SitesPage({ store }: { store: GenbaStore }) {
                   id="site-manager"
                   value={form.manager}
                   onChange={(e) => set('manager', e.target.value)}
-                  placeholder="例: 田中 健一"
                 />
               </div>
               <div className="space-y-1.5">
@@ -292,7 +290,6 @@ export default function SitesPage({ store }: { store: GenbaStore }) {
                   id="site-contractor"
                   value={form.contractor}
                   onChange={(e) => set('contractor', e.target.value)}
-                  placeholder="例: 山田建設株式会社"
                 />
               </div>
             </div>
@@ -302,7 +299,6 @@ export default function SitesPage({ store }: { store: GenbaStore }) {
                 id="site-location"
                 value={form.location}
                 onChange={(e) => set('location', e.target.value)}
-                placeholder="例: 東京都新宿区…"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">

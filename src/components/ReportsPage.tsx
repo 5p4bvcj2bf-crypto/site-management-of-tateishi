@@ -335,7 +335,6 @@ export default function ReportsPage({ store }: { store: GenbaStore }) {
                 rows={3}
                 value={form.workContent}
                 onChange={(e) => set('workContent', e.target.value)}
-                placeholder="例: 3階コンクリート打設、型枠組立…"
               />
             </div>
             <div className="flex items-center gap-2">

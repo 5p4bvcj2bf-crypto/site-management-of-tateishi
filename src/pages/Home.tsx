@@ -84,40 +84,40 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-slate-300 sm:block">{todayLabel}</span>
-            {/* 利用者名入力 */}
+            {/* 利用者切り替え */}
             <div className="flex items-center gap-2">
-              <UserRound className="h-4 w-4 text-slate-300" />
-              <Input
-                list="genba-known-names"
-                value={store.currentUserName}
-                onChange={(e) => store.setCurrentUserName(e.target.value)}
-                placeholder="名前を入力"
-                aria-label="利用者名"
-                className="h-8 w-40 border-slate-600 bg-slate-800 text-xs text-white placeholder:text-slate-500 hover:bg-slate-700"
-              />
-              <datalist id="genba-known-names">
-                {store.knownNames.map((n) => (
-                  <option key={n} value={n} />
-                ))}
-              </datalist>
-              {store.isAdmin && (
-                <Badge className="border-0 bg-amber-500 text-slate-900 hover:bg-amber-500">
-                  管理者
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-slate-300 hover:bg-slate-800 hover:text-white"
-                aria-label="管理者設定"
-                onClick={() => {
-                  setAdminDraft(store.adminName)
-                  setAdminOpen(true)
-                }}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </div>
+            <UserRound className="h-4 w-4 text-slate-300" />
+            <Input
+              list="genba-known-names"
+              value={store.currentUserName}
+              onChange={(e) => store.setCurrentUserName(e.target.value)}
+              placeholder="名前を入力"
+              aria-label="利用者名"
+              className="h-8 w-40 border-slate-600 bg-slate-800 text-xs text-white placeholder:text-slate-500 hover:bg-slate-700"
+            />
+            <datalist id="genba-known-names">
+              {store.knownNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
+            {store.isAdmin && (
+              <Badge className="border-0 bg-amber-500 text-slate-900 hover:bg-amber-500">
+                管理者
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-slate-300 hover:bg-slate-800 hover:text-white"
+              aria-label="管理者設定"
+              onClick={() => {
+                setAdminDraft(store.adminName)
+                setAdminOpen(true)
+              }}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
             <Button
               variant="ghost"
               size="sm"
@@ -157,7 +157,7 @@ export default function Home() {
             ))}
           </nav>
           <p className="mt-6 px-3 text-[11px] leading-relaxed text-slate-400">
-            データはこの端末のブラウザに保存されます。他の人が登録したデータは閲覧のみです（管理者は編集可）。
+            データはこの端末のブラウザに保存されます。他のメンバーが登録したデータは閲覧のみです（管理者は編集可）。
           </p>
         </aside>
 
@@ -209,7 +209,6 @@ export default function Home() {
               id="admin-name"
               value={adminDraft}
               onChange={(e) => setAdminDraft(e.target.value)}
-              placeholder="例: 立石 一郎"
             />
             <p className="text-xs leading-relaxed text-muted-foreground">
               ヘッダーでこの名前と同じ名前を入力すると「管理者」になり、全データの編集ができます。
