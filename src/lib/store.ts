@@ -1,28 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Claim, DailyReport, Site, TeamMember } from '@/types'
+import type { Claim, DailyReport, Site } from '@/types'
 
-const STORAGE_KEY = 'genba-kanri-data-v1'
-const MEMBER_KEY = 'genba-kanri-current-member'
+const STORAGE_KEY = 'genba-kanri-data-v2'
+const NAME_KEY = 'genba-kanri-current-name'
+const ADMIN_KEY = 'genba-kanri-admin-name'
 
 export interface PersistedData {
   sites: Site[]
   reports: DailyReport[]
   claims: Claim[]
-  members: TeamMember[]
 }
 
 export function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
-}
-
-/** デフォルトのチームメンバー（初回・移行時に使用） */
-export function defaultMembers(): TeamMember[] {
-  return [
-    { id: 'member-1', name: '中村 翔太', role: '管理者' },
-    { id: 'member-2', name: '山田 太郎', role: 'メンバー' },
-    { id: 'member-3', name: '鈴木 花子', role: 'メンバー' },
-    { id: 'member-4', name: '高橋 健', role: 'メンバー' },
-  ]
 }
 
 export function todayStr(): string {
@@ -49,9 +39,9 @@ export function fmtDate(iso: string): string {
   return `${y}/${m}/${d}`
 }
 
-/** 初期状態: データはすべて空。メンバーだけはチーム利用のため既定値を設定 */
-function seed(): PersistedData {
-  return { sites: [], reports: [], claims: [], members: defaultMembers() }
+/** 初期状態: すべて空 */
+function emptyData(): PersistedData {
+  return { sites: [], reports: [], claims: [] }
 }
 
 function load(): PersistedData {
@@ -60,43 +50,27 @@ function load(): PersistedData {
     if (raw) {
       const parsed = JSON.parse(raw) as PersistedData
       if (parsed.sites && parsed.reports && parsed.claims) {
-        // 移行: チームメンバー未設定の場合はデフォルトメンバーを補完
-        if (!parsed.members || parsed.members.length === 0) {
-          parsed.members = defaultMembers()
-        }
-        // 移行: 設備種別・作成者が未設定の既存データを補完
-        const fallback = parsed.members[0].id
-        parsed.sites = parsed.sites.map((s) => ({
-          ...s,
-          facilityType: s.facilityType ?? 'キッチン',
-          createdBy: s.createdBy ?? fallback,
-        }))
-        parsed.reports = parsed.reports.map((r) => ({
-          ...r,
-          createdBy: r.createdBy ?? fallback,
-        }))
-        parsed.claims = parsed.claims.map((c) => ({
-          ...c,
-          createdBy: c.createdBy ?? fallback,
-        }))
         return parsed
       }
     }
   } catch {
-    /* fall through to seed */
+    /* fall through to empty */
   }
-  return seed()
+  return emptyData()
+}
+
+function loadString(key: string): string {
+  try {
+    return localStorage.getItem(key) || ''
+  } catch {
+    return ''
+  }
 }
 
 export function useGenbaStore() {
   const [data, setData] = useState<PersistedData>(load)
-  const [currentMemberId, setCurrentMemberId] = useState<string>(() => {
-    try {
-      return localStorage.getItem(MEMBER_KEY) || 'member-1'
-    } catch {
-      return 'member-1'
-    }
-  })
+  const [currentUserName, setCurrentUserName] = useState<string>(() => loadString(NAME_KEY))
+  const [adminName, setAdminName] = useState<string>(() => loadString(ADMIN_KEY))
 
   useEffect(() => {
     try {
@@ -108,24 +82,43 @@ export function useGenbaStore() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(MEMBER_KEY, currentMemberId)
+      localStorage.setItem(NAME_KEY, currentUserName)
     } catch {
       /* ignore */
     }
-  }, [currentMemberId])
+  }, [currentUserName])
 
-  const memberById = useCallback(
-    (id: string) => data.members.find((m) => m.id === id),
-    [data.members]
+  useEffect(() => {
+    try {
+      localStorage.setItem(ADMIN_KEY, adminName)
+    } catch {
+      /* ignore */
+    }
+  }, [adminName])
+
+  /** 現在の利用者が管理者かどうか（入力名が管理者名と一致する場合） */
+  const isAdmin = !!adminName && !!currentUserName && currentUserName === adminName
+
+  /**
+   * このレコードを現在の利用者が編集できるか。
+   * 管理者は全て編集可。それ以外は、登録時の名前と現在入力している名前が一致する場合のみ。
+   */
+  const canEdit = useCallback(
+    (createdBy: string) => isAdmin || (!!currentUserName && createdBy === currentUserName),
+    [currentUserName, isAdmin]
   )
 
-  const currentMember = memberById(currentMemberId) ?? data.members[0]
-
-  /** このレコードを現在の利用者が編集できるか（管理者は全て編集可） */
-  const canEdit = useCallback(
-    (createdBy: string) =>
-      !!currentMember && (currentMember.role === '管理者' || currentMember.id === createdBy),
-    [currentMember]
+  /** これまでに入力された名前（担当者・登録者）の候補リスト */
+  const knownNames: string[] = Array.from(
+    new Set(
+      [
+        ...data.sites.map((s) => s.manager),
+        ...data.claims.map((c) => c.manager),
+        ...data.sites.map((s) => s.createdBy),
+        ...data.reports.map((r) => r.createdBy),
+        ...data.claims.map((c) => c.createdBy),
+      ].filter((n) => !!n && n.trim())
+    )
   )
 
   // ── 現場 ──────────────────────────────────────────────
@@ -173,7 +166,7 @@ export function useGenbaStore() {
   }, [])
 
   const resetAll = useCallback(() => {
-    setData(seed())
+    setData(emptyData())
   }, [])
 
   const siteById = useCallback(
@@ -183,11 +176,13 @@ export function useGenbaStore() {
 
   return {
     data,
-    currentMemberId,
-    setCurrentMemberId,
-    currentMember,
-    memberById,
+    currentUserName,
+    setCurrentUserName,
+    adminName,
+    setAdminName,
+    isAdmin,
     canEdit,
+    knownNames,
     addSite,
     updateSite,
     removeSite,

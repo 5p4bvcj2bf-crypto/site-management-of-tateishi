@@ -3,15 +3,6 @@ export type SiteStatus = '計画中' | '施工中' | '一時中断' | '完了'
 /** 設備種別: キッチン or ユニットバス */
 export type FacilityType = 'キッチン' | 'ユニットバス'
 
-/** チームメンバーの役割 */
-export type MemberRole = '管理者' | 'メンバー'
-
-export interface TeamMember {
-  id: string
-  name: string
-  role: MemberRole
-}
-
 export interface Site {
   id: string
   name: string
@@ -23,7 +14,7 @@ export interface Site {
   startDate: string // 着工日
   endDate: string // 完了予定日
   progress: number // 進捗率 0-100
-  createdBy: string // 登録したメンバーID
+  createdBy: string // 登録した人の名前
 }
 
 export type Weather = '晴' | '曇' | '雨' | '雪'
@@ -39,7 +30,7 @@ export interface DailyReport {
   safetyMeeting: boolean // 朝礼・安全ミーティング
   incidents: string // 事故・ヒヤリハット(なしの場合は「なし」)
   notes: string // 特記事項
-  createdBy: string // 登録したメンバーID
+  createdBy: string // 登録した人の名前
 }
 
 export type ClaimPriority = '高' | '中' | '低'
@@ -58,5 +49,5 @@ export interface Claim {
   status: ClaimStatus
   deadline: string // 対応期限(納期)
   completedDate?: string // 完了日
-  createdBy: string // 登録したメンバーID
+  createdBy: string // 登録した人の名前
 }
