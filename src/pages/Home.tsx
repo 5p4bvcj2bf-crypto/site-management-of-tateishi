@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import {
   Building2,
   ClipboardCheck,
@@ -7,18 +6,21 @@ import {
   HardHat,
   LayoutDashboard,
   RotateCcw,
+  Settings,
   UserRound,
 } from 'lucide-react'
 import { Toaster } from '@/components/ui/sonner'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import ClaimsPage from '@/components/ClaimsPage'
 import Dashboard from '@/components/Dashboard'
 import ReportsPage from '@/components/ReportsPage'
@@ -51,6 +53,8 @@ const SUBTITLES: Record<PageKey, string> = {
 export default function Home() {
   const store = useGenbaStore()
   const [page, setPage] = useState<PageKey>('dashboard')
+  const [adminOpen, setAdminOpen] = useState(false)
+  const [adminDraft, setAdminDraft] = useState(store.adminName)
 
   const todayLabel = useMemo(() => {
     const d = new Date()
@@ -80,39 +84,39 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-slate-300 sm:block">{todayLabel}</span>
-            {/* 利用者切り替え */}
+            {/* 利用者名入力 */}
             <div className="flex items-center gap-2">
               <UserRound className="h-4 w-4 text-slate-300" />
-              <Select
-                value={store.currentMemberId}
-                onValueChange={(id) => {
-                  store.setCurrentMemberId(id)
-                  const m = store.memberById(id)
-                  if (m) toast.success(`${m.name} さんとして利用中（${m.role}）`)
-                }}
-              >
-                <SelectTrigger className="h-8 w-40 border-slate-600 bg-slate-800 text-xs text-white hover:bg-slate-700">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {store.data.members.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name}（{m.role}）
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {store.currentMember && (
-                <Badge
-                  className={
-                    store.currentMember.role === '管理者'
-                      ? 'border-0 bg-amber-500 text-slate-900 hover:bg-amber-500'
-                      : 'border-0 bg-slate-600 text-white hover:bg-slate-600'
-                  }
-                >
-                  {store.currentMember.role}
+              <Input
+                list="genba-known-names"
+                value={store.currentUserName}
+                onChange={(e) => store.setCurrentUserName(e.target.value)}
+                placeholder="名前を入力"
+                aria-label="利用者名"
+                className="h-8 w-40 border-slate-600 bg-slate-800 text-xs text-white placeholder:text-slate-500 hover:bg-slate-700"
+              />
+              <datalist id="genba-known-names">
+                {store.knownNames.map((n) => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
+              {store.isAdmin && (
+                <Badge className="border-0 bg-amber-500 text-slate-900 hover:bg-amber-500">
+                  管理者
                 </Badge>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-slate-300 hover:bg-slate-800 hover:text-white"
+                aria-label="管理者設定"
+                onClick={() => {
+                  setAdminDraft(store.adminName)
+                  setAdminOpen(true)
+                }}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
             <Button
               variant="ghost"
@@ -153,7 +157,7 @@ export default function Home() {
             ))}
           </nav>
           <p className="mt-6 px-3 text-[11px] leading-relaxed text-slate-400">
-            データはこの端末のブラウザに保存されます。他のメンバーが登録したデータは閲覧のみです（管理者は編集可）。
+            データはこの端末のブラウザに保存されます。他の人が登録したデータは閲覧のみです（管理者は編集可）。
           </p>
         </aside>
 
@@ -192,6 +196,41 @@ export default function Home() {
           {page === 'claims' && <ClaimsPage store={store} />}
         </main>
       </div>
+
+      {/* 管理者名設定 */}
+      <Dialog open={adminOpen} onOpenChange={setAdminOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>管理者設定</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="admin-name">管理者名</Label>
+            <Input
+              id="admin-name"
+              value={adminDraft}
+              onChange={(e) => setAdminDraft(e.target.value)}
+              placeholder="例: 立石 一郎"
+            />
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              ヘッダーでこの名前と同じ名前を入力すると「管理者」になり、全データの編集ができます。
+              空欄にすると管理者は存在しない状態（各担当者は自分が登録したデータのみ編集可）になります。
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdminOpen(false)}>
+              キャンセル
+            </Button>
+            <Button
+              onClick={() => {
+                store.setAdminName(adminDraft.trim())
+                setAdminOpen(false)
+              }}
+            >
+              保存する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
