@@ -140,7 +140,7 @@ export default function ClaimsPage({ store }: { store: GenbaStore }) {
       store.updateClaim({ ...payload, id: editing.id, code: editing.code })
       toast.success(`クレーム ${editing.code} を更新しました`)
     } else {
-      store.addClaim({ ...payload, createdBy: store.currentMemberId })
+      store.addClaim({ ...payload, createdBy: store.currentUserName })
       toast.success('クレームを登録しました')
     }
     setDialogOpen(false)
@@ -296,7 +296,7 @@ export default function ClaimsPage({ store }: { store: GenbaStore }) {
                       <TableCell>
                         <p className="text-sm">{c.manager}</p>
                         <p className="text-xs text-muted-foreground">
-                          {store.memberById(c.createdBy)?.name ?? '—'}
+                          {c.createdBy || '—'}
                           {store.canEdit(c.createdBy) ? '' : '（閲覧のみ）'}
                         </p>
                       </TableCell>
