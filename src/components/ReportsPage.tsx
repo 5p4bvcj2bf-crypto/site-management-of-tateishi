@@ -110,7 +110,7 @@ export default function ReportsPage({ store }: { store: GenbaStore }) {
       store.updateReport({ ...form, id: editing.id })
       toast.success('日次報告を更新しました')
     } else {
-      store.addReport({ ...form, createdBy: store.currentMemberId })
+      store.addReport({ ...form, createdBy: store.currentUserName })
       toast.success('日次報告を登録しました')
     }
     setDialogOpen(false)
@@ -216,7 +216,7 @@ export default function ReportsPage({ store }: { store: GenbaStore }) {
                     <p className="text-xs text-muted-foreground">
                       {fmtDate(r.date)} ・ 作業員 {r.workers}名 ・ 担当: {site?.manager ?? '—'} ・
                       施工: {site?.contractor ?? '—'} ・ 報告者:{' '}
-                      {store.memberById(r.createdBy)?.name ?? '—'}
+                      {r.createdBy || '—'}
                       {store.canEdit(r.createdBy) ? '' : '（閲覧のみ）'}
                     </p>
                     <p className="text-sm">{r.workContent}</p>
