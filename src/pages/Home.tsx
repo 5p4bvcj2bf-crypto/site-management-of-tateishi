@@ -119,7 +119,7 @@ export default function Home() {
               size="sm"
               className="h-8 text-slate-300 hover:bg-slate-800 hover:text-white"
               onClick={() => {
-                if (window.confirm('サンプルデータに初期化しますか？入力中のデータは上書きされます。')) {
+                if (window.confirm('すべてのデータを削除して空の状態に戻しますか？この操作は取り消せません。')) {
                   store.resetAll()
                 }
               }}
