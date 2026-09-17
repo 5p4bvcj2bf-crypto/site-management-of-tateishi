@@ -5,7 +5,7 @@
 
 ## 公開URL
 
-https://5p4bvcj2bf-crypto.github.io/site-management-of-tateishi/
+**https://site-management-of-tateishi.surge.sh**
 
 アドレスを知っている人は誰でもブラウザから利用できます（インストール不要）。
 
@@ -20,15 +20,11 @@ https://5p4bvcj2bf-crypto.github.io/site-management-of-tateishi/
 ## データの保存について
 
 データは各利用者のブラウザ内（localStorage）に保存されます。
-端末やブラウザを変えるとデータは別々になります。共有のデータベース化が必要な場合は別途対応が必要です。
+端末やブラウザを変えるとデータは別々になります。チーム全員で同じデータを共有するにはクラウドデータベース化が必要です。
 
 ## 開発
 
 ```bash
 npm install
-npm run dev
+npm run build   # dist/ に出力 → surge などで公開
 ```
-
-## デプロイ
-
-`main` ブランチへの push で GitHub Actions がビルドし、GitHub Pages に自動公開されます。
