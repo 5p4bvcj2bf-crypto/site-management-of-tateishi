@@ -5,6 +5,7 @@ import {
   FileWarning,
   HardHat,
   LayoutDashboard,
+  Lock,
   RotateCcw,
   Settings,
   UserRound,
@@ -23,6 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import ClaimsPage from '@/components/ClaimsPage'
 import Dashboard from '@/components/Dashboard'
+import LockScreen from '@/components/LockScreen'
 import ReportsPage from '@/components/ReportsPage'
 import SitesPage from '@/components/SitesPage'
 import { useGenbaStore } from '@/lib/store'
@@ -55,12 +57,18 @@ export default function Home() {
   const [page, setPage] = useState<PageKey>('dashboard')
   const [adminOpen, setAdminOpen] = useState(false)
   const [adminDraft, setAdminDraft] = useState(store.adminName)
+  const [inviteDraft, setInviteDraft] = useState(store.inviteCode)
 
   const todayLabel = useMemo(() => {
     const d = new Date()
     const days = ['日', '月', '火', '水', '木', '金', '土']
     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${days[d.getDay()]})`
   }, [])
+
+  // 招待コードが設定済みで未承認の端末はロック画面のみ表示
+  if (store.isLocked) {
+    return <LockScreen store={store} />
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -112,12 +120,29 @@ export default function Home() {
               aria-label="管理者設定"
               onClick={() => {
                 setAdminDraft(store.adminName)
+                setInviteDraft(store.inviteCode)
                 setAdminOpen(true)
               }}
             >
               <Settings className="h-4 w-4" />
             </Button>
           </div>
+            {store.inviteCode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-slate-300 hover:bg-slate-800 hover:text-white"
+                aria-label="ロック"
+                title="ロックして別の人に切り替え"
+                onClick={() => {
+                  if (window.confirm('ロック画面に戻りますか？次に使う人は招待コードの再入力が必要です。')) {
+                    store.lock()
+                  }
+                }}
+              >
+                <Lock className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -215,6 +240,18 @@ export default function Home() {
               空欄にすると管理者は存在しない状態（各担当者は自分が登録したデータのみ編集可）になります。
             </p>
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="invite-code">招待コード</Label>
+            <Input
+              id="invite-code"
+              value={inviteDraft}
+              onChange={(e) => setInviteDraft(e.target.value)}
+            />
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              コードを設定するとアプリがロックされ、コードを知っている人だけが閲覧・入力できます。
+              メンバーにはこのコードをLINEなどでお知らせください。空欄にするとロックが解除されます。
+            </p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAdminOpen(false)}>
               キャンセル
@@ -222,6 +259,9 @@ export default function Home() {
             <Button
               onClick={() => {
                 store.setAdminName(adminDraft.trim())
+                store.setInviteCode(inviteDraft)
+                // コードを設定した本人の端末はそのまま承認済みにする
+                if (inviteDraft.trim()) store.approve()
                 setAdminOpen(false)
               }}
             >

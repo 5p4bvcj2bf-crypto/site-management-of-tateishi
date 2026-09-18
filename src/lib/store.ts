@@ -4,6 +4,8 @@ import type { Claim, DailyReport, Site } from '@/types'
 const STORAGE_KEY = 'genba-kanri-data-v2'
 const NAME_KEY = 'genba-kanri-current-name'
 const ADMIN_KEY = 'genba-kanri-admin-name'
+const INVITE_KEY = 'genba-kanri-invite-code'
+const APPROVED_KEY = 'genba-kanri-approved'
 
 export interface PersistedData {
   sites: Site[]
@@ -71,6 +73,8 @@ export function useGenbaStore() {
   const [data, setData] = useState<PersistedData>(load)
   const [currentUserName, setCurrentUserName] = useState<string>(() => loadString(NAME_KEY))
   const [adminName, setAdminName] = useState<string>(() => loadString(ADMIN_KEY))
+  const [inviteCode, setInviteCodeState] = useState<string>(() => loadString(INVITE_KEY))
+  const [approved, setApproved] = useState<boolean>(() => loadString(APPROVED_KEY) === '1')
 
   useEffect(() => {
     try {
@@ -95,6 +99,47 @@ export function useGenbaStore() {
       /* ignore */
     }
   }, [adminName])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(INVITE_KEY, inviteCode)
+    } catch {
+      /* ignore */
+    }
+  }, [inviteCode])
+
+  useEffect(() => {
+    try {
+      if (approved) {
+        localStorage.setItem(APPROVED_KEY, '1')
+      } else {
+        localStorage.removeItem(APPROVED_KEY)
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [approved])
+
+  /** 招待コードが一致するか（トリム・大文字小文字無視） */
+  const matchInviteCode = useCallback(
+    (input: string) =>
+      !!inviteCode && input.trim().toLowerCase() === inviteCode.trim().toLowerCase(),
+    [inviteCode]
+  )
+
+  /** 招待コードを設定（空でロックOFF） */
+  const setInviteCode = useCallback((code: string) => {
+    setInviteCodeState(code.trim())
+  }, [])
+
+  /** この端末を承認済みにする */
+  const approve = useCallback(() => setApproved(true), [])
+
+  /** 承認フラグをクリアしてロック画面に戻る */
+  const lock = useCallback(() => setApproved(false), [])
+
+  /** ロックが有効か（コード設定済みかつ未承認） */
+  const isLocked = !!inviteCode && !approved
 
   /** 現在の利用者が管理者かどうか（入力名が管理者名と一致する場合） */
   const isAdmin = !!adminName && !!currentUserName && currentUserName === adminName
@@ -180,6 +225,13 @@ export function useGenbaStore() {
     setCurrentUserName,
     adminName,
     setAdminName,
+    inviteCode,
+    setInviteCode,
+    approved,
+    approve,
+    lock,
+    matchInviteCode,
+    isLocked,
     isAdmin,
     canEdit,
     knownNames,
