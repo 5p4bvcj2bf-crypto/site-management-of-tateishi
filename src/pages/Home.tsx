@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import ClaimsPage from '@/components/ClaimsPage'
+import CoverScreen from '@/components/CoverScreen'
 import Dashboard from '@/components/Dashboard'
 import LockScreen from '@/components/LockScreen'
 import ReportsPage from '@/components/ReportsPage'
@@ -58,12 +59,18 @@ export default function Home() {
   const [adminOpen, setAdminOpen] = useState(false)
   const [adminDraft, setAdminDraft] = useState(store.adminName)
   const [inviteDraft, setInviteDraft] = useState(store.inviteCode)
+  const [coverOpen, setCoverOpen] = useState(true)
 
   const todayLabel = useMemo(() => {
     const d = new Date()
     const days = ['日', '月', '火', '水', '木', '金', '土']
     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${days[d.getDay()]})`
   }, [])
+
+  // 表紙（カバー画面）→ 「アプリを開く」で内部に進む
+  if (coverOpen) {
+    return <CoverScreen onEnter={() => setCoverOpen(false)} />
+  }
 
   // 招待コードが設定済みで未承認の端末はロック画面のみ表示
   if (store.isLocked) {
